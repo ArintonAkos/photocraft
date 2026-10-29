@@ -171,6 +171,16 @@ fn to_psd_rect(r: photocraft_geom::Rect) -> PsdRect {
     PsdRect { top: r.y0, left: r.x0, bottom: r.y1, right: r.x1 }
 }
 
+/// The compression a merged image of `sample` depth is written with, given the one asked for.
+///
+/// RLE (PackBits) is what Photoshop writes for an 8-bit merged image, and only there: its 16- and
+/// 32-bit merged images are raw. Readers built on what Photoshop writes, macOS ImageIO (Finder,
+/// Quick Look, Preview) among them, refuse a deeper one in RLE (#9716), so RLE asked for a deeper
+/// merged image is written raw. ZIP is kept when asked for: Photoshop reads it at any depth.
+pub(crate) fn merged_compression(sample: SampleType, requested: Compression) -> Compression {
+    if sample != SampleType::U8 && requested == Compression::Rle { Compression::Raw } else { requested }
+}
+
 fn q255(v: f32) -> u8 {
     (v.clamp(0.0, 1.0) * 255.0).round() as u8
 }
