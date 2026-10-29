@@ -433,6 +433,6 @@ impl<'a> Para<'a> {
     }
 
     pub(super) fn align_options(&self) -> AlignmentOptions {
-        AlignmentOptions { align_when_overflowing: !self.env.wraps }
+        AlignmentOptions { align_when_overflowing: !self.env.wraps, last_line_alignment: None }
     }
 }
