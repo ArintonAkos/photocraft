@@ -17,11 +17,15 @@ type GlyphRun<'a> = parley::GlyphRun<'a, RunBrush>;
 /// The advance of the whitespace `line` ends with, all of which hangs past the line's end, as in
 /// Photoshop. Parley follows CSS Text 4, where preserved whitespace before a hard break or the end
 /// of the text hangs only as far as it overflows, so its `hanging_advance` leaves that whitespace
-/// inside the line. Tabs are spaces in the paragraph text, so they count.
-pub(super) fn trailing_whitespace(line: &Line<'_>) -> f32 {
+/// inside the line. Tabs are spaces in the paragraph text, so they count. Only whitespace in the
+/// paragraph's direction (`rtl`) hangs: in a run of the other direction it is inside the line.
+pub(super) fn trailing_whitespace(line: &Line<'_>, rtl: bool) -> f32 {
     let mut clusters: Vec<(usize, f32, bool)> = line
         .runs()
-        .flat_map(|r| r.clusters().map(|c| (c.text_range().start, c.advance(), c.is_space_or_nbsp() || c.is_hard_line_break())).collect::<Vec<_>>())
+        .flat_map(|r| {
+            let own = r.is_rtl() == rtl;
+            r.clusters().map(move |c| (c.text_range().start, c.advance(), own && (c.is_space_or_nbsp() || c.is_hard_line_break()))).collect::<Vec<_>>()
+        })
         .collect();
     clusters.sort_by_key(|c| c.0);
     let trailing: f32 = clusters.iter().rev().take_while(|c| c.2).map(|c| c.1).sum();
@@ -432,7 +436,7 @@ impl Para<'_> {
         let env = self.env;
         let m = *line.metrics();
         // Parley's glyph positions include its own offset; `dx` moves them to `offset`.
-        let (offset, hanging) = self.hung_offset(&m, trailing_whitespace(line), rtl);
+        let (offset, hanging) = self.hung_offset(&m, trailing_whitespace(line, rtl), rtl);
         let adv = m.advance - hanging;
         let slots = collect_kern_slots(line, self);
         let mut kern_px = self.kerning(optical, &slots);

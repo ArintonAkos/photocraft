@@ -1158,8 +1158,10 @@ mod tests {
         // As `load_system_fonts` loads each file.
         collection.load_fonts_from_paths([&path]);
         let _ = std::fs::remove_file(&path);
-        let faces = collection.family_by_name("Inter").map_or(0, |f| f.fonts().len());
-        assert_eq!(faces, n as usize);
+        // Each face once: the indexes 0..n, none twice and none missing.
+        let mut indexes: Vec<u32> = collection.family_by_name("Inter").map_or_else(Vec::new, |f| f.fonts().iter().map(|font| font.index()).collect());
+        indexes.sort_unstable();
+        assert_eq!(indexes, (0..n).collect::<Vec<_>>());
     }
 
     /// Core Text lists the system's font files, all readable, none of the reserved UI fonts.

@@ -106,8 +106,9 @@ pub(super) fn break_area(
         let (slots, overflow) = break_area_pass(layout, &mut rows, inset, scale, &needs);
         budget.set(budget.get().saturating_sub(1));
         // Each line's text start and scaled width without its trailing whitespace.
+        let rtl = layout.is_rtl();
         let lines: Vec<(usize, f32)> =
-            layout.lines().map(|l| (l.text_range().start, (l.metrics().advance - super::lines::trailing_whitespace(&l)) * scale)).collect();
+            layout.lines().map(|l| (l.text_range().start, (l.metrics().advance - super::lines::trailing_whitespace(&l, rtl)) * scale)).collect();
         // A line still wider than its span that some span of the shape would hold: the shape ran
         // out of room for it (the narrow bottom of a full bubble). It and the rest are hidden, as
         // overflow; only a word no span holds overflows its span.
