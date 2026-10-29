@@ -29,8 +29,8 @@ fn sensor_plane(s: &photocraft_raw::Sensor) -> Plane {
     (w, h, out)
 }
 
-fn jpeg_plane(jpeg: &[u8]) -> Plane {
-    let img = codecs::decode_as(Format::Jpeg, jpeg).expect("decode the embedded JPEG");
+fn jpeg_plane(jpeg: &[u8]) -> Result<Plane, String> {
+    let img = codecs::decode_as(Format::Jpeg, jpeg).map_err(|e| e.to_string())?;
     let rgb = img.convert(ChannelLayout::Rgb, SampleType::U8);
     let (fw, fh) = (rgb.width() as usize, rgb.height() as usize);
     let d = rgb.data();
@@ -46,7 +46,7 @@ fn jpeg_plane(jpeg: &[u8]) -> Plane {
             out[y * w + x] = sum / (12.0 * 255.0);
         }
     }
-    (w, h, out)
+    Ok((w, h, out))
 }
 
 /// Normalized cross-correlation of `j` placed at (`ox`, `oy`) in `s`, over every `step`-th sample.
@@ -71,7 +71,13 @@ fn ncc(s: &Plane, j: &Plane, ox: usize, oy: usize, step: usize) -> f64 {
 
 fn main() {
     for path in std::env::args().skip(1) {
-        let bytes = std::fs::read(&path).expect("read");
+        let bytes = match std::fs::read(&path) {
+            Ok(b) => b,
+            Err(e) => {
+                println!("{path}: not read: {e}");
+                continue;
+            }
+        };
         let sensor = match photocraft_raw::decode(&bytes, &Default::default()) {
             Ok(s) => s,
             Err(e) => {
@@ -84,13 +90,20 @@ fn main() {
             println!("{path}: no embedded JPEG; crop {crop:?}");
             continue;
         };
-        let (s, j) = (sensor_plane(&sensor), jpeg_plane(preview.jpeg));
+        let j = match jpeg_plane(preview.jpeg) {
+            Ok(j) => j,
+            Err(e) => {
+                println!("{path}: embedded JPEG not decoded: {e}");
+                continue;
+            }
+        };
+        let s = sensor_plane(&sensor);
         if (crop.width, crop.height) == (2 * j.0, 2 * j.1) || (crop.width, crop.height) == (preview.width as usize, preview.height as usize) {
             println!("{path}: already cropped to the JPEG's {}x{} at ({}, {})", crop.width, crop.height, crop.x, crop.y);
             continue;
         }
         // A JPEG much smaller than the data is a reduced preview, not the image area.
-        if j.0 > s.0 || j.1 > s.1 || 4 * j.0 < 3 * s.0 {
+        if j.0 > s.0 || j.1 > s.1 || 4 * j.0 < 3 * s.0 || 4 * j.1 < 3 * s.1 {
             println!("{path}: JPEG {}x{} doesn't measure {}x{} sensor data (crop {crop:?})", preview.width, preview.height, sensor.width, sensor.height);
             continue;
         }
