@@ -171,6 +171,15 @@ fn to_psd_rect(r: photocraft_geom::Rect) -> PsdRect {
     PsdRect { top: r.y0, left: r.x0, bottom: r.y1, right: r.x1 }
 }
 
+/// The merged image of `planes` in `compression`. Raw takes `planes` as they are, with no copy (a
+/// 36 MP 16-bit merged image is 216 MB); a compression that fails falls back to raw.
+pub(crate) fn merged_image_data(compression: Compression, planes: Vec<u8>, header: &Header) -> ImageData {
+    if compression == Compression::Raw {
+        return ImageData::new(Compression::Raw, planes);
+    }
+    ImageData::encode(compression, &planes, header).unwrap_or(ImageData::new(Compression::Raw, planes))
+}
+
 /// The compression a merged image of `sample` depth is written with, given the one asked for.
 ///
 /// RLE (PackBits) is what Photoshop writes for an 8-bit merged image, and only there: its 16- and
