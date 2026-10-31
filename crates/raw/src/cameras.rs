@@ -159,6 +159,11 @@ const PROFILES: &[Profile] = &[Profile {
 ///   on the D4's sensor (two files: 0.949 and 0.944, 0.945 and 0.941). Each
 ///   area is the size of the camera's JPEG. The D7100 and D5200 are left out:
 ///   their files gave different offsets or no clear best one.
+/// * **D5500 and D5600** (two raw.pixls.us files each): (8, 8) in 6016 x 4016,
+///   the D3300's area (D5500: 0.876 against 0.867, 0.879 against 0.870; D5600:
+///   0.939 against 0.894, 0.936 against 0.907). The D5500's lead is narrow, but
+///   both files agree, and an independent alignment on the full-size planes
+///   found the same corner for both bodies.
 /// * **Older Nikon bodies**, measured the same way: D3 at (16, 6) and D3S at
 ///   (14, 6) in 4288 x 2844 (three files each: 0.978–0.980 against 0.974–0.976,
 ///   0.962–0.966 against 0.887–0.909); D3X at (16, 6) in 6080 x 4044 (two
@@ -207,6 +212,8 @@ const IMAGE_AREAS: &[ImageArea] = &[
     ImageArea { make: "NIKON CORPORATION", model: "COOLPIX A", size: (4992, 3280), crop: (8, 8, 4928, 3264) },
     ImageArea { make: "NIKON CORPORATION", model: "NIKON D3200", size: (6080, 4012), crop: (8, 6, 6016, 4000) },
     ImageArea { make: "NIKON CORPORATION", model: "NIKON D3300", size: (6016, 4016), crop: (8, 8, 6000, 4000) },
+    ImageArea { make: "NIKON CORPORATION", model: "NIKON D5500", size: (6016, 4016), crop: (8, 8, 6000, 4000) },
+    ImageArea { make: "NIKON CORPORATION", model: "NIKON D5600", size: (6016, 4016), crop: (8, 8, 6000, 4000) },
     ImageArea { make: "NIKON CORPORATION", model: "NIKON D600", size: (6080, 4028), crop: (8, 6, 6016, 4016) },
     ImageArea { make: "NIKON CORPORATION", model: "NIKON D610", size: (6080, 4028), crop: (8, 6, 6016, 4016) },
     ImageArea { make: "NIKON CORPORATION", model: "NIKON D700", size: (4288, 2844), crop: (14, 6, 4256, 2832) },
@@ -366,6 +373,8 @@ mod tests {
             ("NIKON D800", 7424, 4924, Rect::new(8, 6, 7360, 4912)),
             ("NIKON D810", 7380, 4928, Rect::new(12, 8, 7360, 4912)),
             ("NIKON D750", 6032, 4032, Rect::new(8, 8, 6016, 4016)),
+            ("NIKON D5500", 6016, 4016, Rect::new(8, 8, 6000, 4000)),
+            ("NIKON D5600", 6016, 4016, Rect::new(8, 8, 6000, 4000)),
             ("NIKON D700", 4288, 2844, Rect::new(14, 6, 4256, 2832)),
             ("NIKON Df", 4992, 3292, Rect::new(8, 6, 4928, 3280)),
         ] {
