@@ -437,6 +437,16 @@ mod tests {
         }
     }
 
+    /// A crop only applies to data of exactly the measured size, so a table entry that lies inside
+    /// its own size can never reach past the sensor data.
+    #[test]
+    fn every_measured_crop_lies_inside_its_sensor_data() {
+        let entries = IMAGE_AREAS.iter().map(|a| (a.model, a.size, a.crop)).chain(PROFILES.iter().map(|p| (p.model, p.size, p.crop)));
+        for (model, (sw, sh), (x, y, w, h)) in entries {
+            assert!(w > 0 && h > 0 && x + w <= sw && y + h <= sh, "{model}: {w}x{h} at ({x}, {y}) in {sw}x{sh}");
+        }
+    }
+
     #[test]
     fn d4_forward_matrix_maps_neutral_to_d50_and_curve_reaches_white() {
         let n = mat_apply(&D4_FORWARD, [1.0; 3]);
