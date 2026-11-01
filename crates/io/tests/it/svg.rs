@@ -380,9 +380,12 @@ fn an_embedded_svg_gets_only_the_nesting_depth_the_drawing_left() {
         .spawn(move || {
             let r = open(&embed(svg::MAX_XML_DEPTH - 1, svg::MAX_XML_DEPTH - 1));
             assert!(px(&r.document, 4, 4)[3] < 0.01, "{:?}", px(&r.document, 4, 4));
-            // Within the shared budget the embedded drawing renders (its rect is black).
-            let r = open(&embed(120, 120));
+            // Within the shared budget the embedded drawing renders (its rect is black). With the
+            // two <svg> roots, 127 + 127 groups fill the 256 budget exactly; one more is past it.
+            let r = open(&embed(127, 127));
             assert!(close(px(&r.document, 4, 4), [0.0, 0.0, 0.0, 1.0]), "{:?}", px(&r.document, 4, 4));
+            let r = open(&embed(127, 128));
+            assert!(px(&r.document, 4, 4)[3] < 0.01, "{:?}", px(&r.document, 4, 4));
         })
         .unwrap()
         .join()
