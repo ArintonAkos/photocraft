@@ -407,9 +407,17 @@ fn deeply_nested_markup_is_an_error_not_a_stack_overflow() {
         .unwrap()
         .join()
         .unwrap();
-    // Just inside the limit still opens, the empty groups folded away.
-    let r = open(&nested(svg::MAX_XML_DEPTH - 1));
-    assert_eq!(r.document.layers.len(), 1);
+    // Just inside the limit still opens, the empty groups folded away, on the 1 MB stack that
+    // Windows' main thread and the browser build give the open.
+    std::thread::Builder::new()
+        .stack_size(1 << 20)
+        .spawn(|| {
+            let r = open(&nested(svg::MAX_XML_DEPTH - 1));
+            assert_eq!(r.document.layers.len(), 1);
+        })
+        .unwrap()
+        .join()
+        .unwrap();
 }
 
 /// The depth check reads the markup, not the parser's tree: it must not count `<` in comments,
