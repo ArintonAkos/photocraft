@@ -819,7 +819,8 @@ fn side_by_side_svg_images_need_one_scratch_surface() {
 }
 
 /// usvg parses an embedded SVG on top of the drawing's own recursion: 511 + 511 levels, each fine
-/// alone, overflowed a 1 MB stack. The bounded path shares [`MAX_XML_DEPTH`] between them too.
+/// alone, overflowed a 1 MB stack. The bounded path shares [`MAX_XML_DEPTH`] between them too, so
+/// 120 + 120 fits the budget and draws.
 #[test]
 fn bounded_embedded_svg_gets_only_the_nesting_depth_the_drawing_left() {
     let nested = |depth: usize| {
@@ -843,7 +844,7 @@ fn bounded_embedded_svg_gets_only_the_nesting_depth_the_drawing_left() {
             let deep = embed(MAX_XML_DEPTH - 2, MAX_XML_DEPTH - 2);
             let buf = rasterize_bounded(deep.as_bytes(), 1.0, MAX_RASTER_PIXELS).unwrap();
             assert!(buf.px[4 * 8 + 4][3] < 0.01, "the too-deep image is left out");
-            let fine = embed(200, 200);
+            let fine = embed(120, 120);
             let buf = rasterize_bounded(fine.as_bytes(), 1.0, MAX_RASTER_PIXELS).unwrap();
             assert!(buf.px[4 * 8 + 4][3] > 0.99, "within the shared budget the image draws");
         })
