@@ -43,7 +43,10 @@ fn stack(depth: SampleType) -> Document {
     b.mask = Some(LayerMask { surface: m, enabled: true, linked: true, density: 1.0, feather: 0.0 });
     let mut c = solid(&d, "c clipped to b", Rect::new(0, 200, 700, 420), [0.9, 0.9, 0.2, 1.0]);
     c.clipped = true;
-    let group = Layer::group("g", vec![solid(&d, "g1", Rect::new(300, 0, 400, 600), [0.2, 0.8, 0.3, 0.5]), solid(&d, "g2", Rect::new(0, 250, 700, 350), [0.6, 0.1, 0.7, 0.5])]);
+    let group = Layer::group(
+        "g",
+        vec![solid(&d, "g1", Rect::new(300, 0, 400, 600), [0.2, 0.8, 0.3, 0.5]), solid(&d, "g2", Rect::new(0, 250, 700, 350), [0.6, 0.1, 0.7, 0.5])],
+    );
     let mut shadowed = solid(&d, "shadowed", Rect::new(260, 240, 460, 380), [0.3, 0.3, 0.8, 1.0]);
     let common = FxCommon::new(BlendMode::Multiply, 0.8);
     shadowed.effects.items = vec![Effect::DropShadow(Shadow {
@@ -98,6 +101,21 @@ fn renders_through_the_cache_match_the_plain_render_across_edits() {
             ("hide the top adjustment", Box::new(move |d| d.layers[top].visible = false)),
             ("show it again", Box::new(move |d| d.layers[top].visible = true)),
             ("its settings", Box::new(move |d| d.layers[top].content = LayerContent::Adjustment(levels(1.7)))),
+            ("a low layer's mask turned off", Box::new(|d| d.layers[2].mask.iter_mut().for_each(|m| m.enabled = false))),
+            ("and on again", Box::new(|d| d.layers[2].mask.iter_mut().for_each(|m| m.enabled = true))),
+            (
+                "a drop shadow following the global light",
+                Box::new(|d| {
+                    if let Some(Effect::DropShadow(s)) = d.layers[5].effects.items.first_mut() {
+                        s.use_global_light = true;
+                        s.distance = 20.0;
+                    }
+                }),
+            ),
+            // An edit above it, so the tiles hold the composite up to and including the shadow;
+            // then a document setting, not a layer, that changes how the shadow draws.
+            ("the adjustment above it", Box::new(|d| d.layers[6].opacity = 0.7)),
+            ("the global light's angle", Box::new(|d| d.global_light.angle = 30.0)),
             ("a middle layer's opacity", Box::new(|d| d.layers[2].opacity = 0.35)),
             ("the bottom layer", Box::new(|d| d.layers[1].blend = BlendMode::Screen)),
             // Twice, so the tiles hold the stack up to layer 5; then it clips into the group
