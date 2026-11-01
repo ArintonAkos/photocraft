@@ -226,7 +226,17 @@ impl GpuCanvas {
             rs.target_format,
             vram.map_or_else(|| "unknown".to_owned(), |b| format!("{} MB", b >> 20))
         );
-        Self { rs: rs.clone(), tile, high, health, vram, canvas_budget: budget, camera_raw: Default::default(), camera_raw_started: Default::default(), cpu_prefix: Default::default() }
+        Self {
+            rs: rs.clone(),
+            tile,
+            high,
+            health,
+            vram,
+            canvas_budget: budget,
+            camera_raw: Default::default(),
+            camera_raw_started: Default::default(),
+            cpu_prefix: Default::default(),
+        }
     }
 
     /// The device's health flag (shared with the wgpu compositor and the paint callback).

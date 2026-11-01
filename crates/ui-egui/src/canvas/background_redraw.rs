@@ -328,7 +328,11 @@ pub(crate) fn start(
         }
         keep = (vec![None; all.len()], 0, keep.2);
     }
-    spawn(app, ctx, Spawn { doc, display, display_key, text_gamma: gamma, format, visible, blocks: all, pending, since, fallback, keep, prefix: gpu.cpu_prefix() });
+    spawn(
+        app,
+        ctx,
+        Spawn { doc, display, display_key, text_gamma: gamma, format, visible, blocks: all, pending, since, fallback, keep, prefix: gpu.cpu_prefix() },
+    );
 }
 
 /// After an edit drew its own damage: continue document `doc.id`'s redraw, if one is running, on
@@ -563,7 +567,10 @@ fn draw(
         #[cfg(target_arch = "wasm32")]
         let batch = batch.iter();
         let pieces: Vec<Piece> = batch
-            .map(|&block| Piece { block, texels: crate::gpu_canvas::display_texels(format, display, &photocraft_compose::render_cached(doc, blocks[block], prefix)) })
+            .map(|&block| Piece {
+                block,
+                texels: crate::gpu_canvas::display_texels(format, display, &photocraft_compose::render_cached(doc, blocks[block], prefix)),
+            })
             .collect();
         for p in pieces {
             if stop.load(Ordering::Relaxed) || tx.send(p).is_err() {
